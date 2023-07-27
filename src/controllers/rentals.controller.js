@@ -54,7 +54,7 @@ export const updateRentalsById = async (req, res) => {
     //a linha abaixo foi necessária pq o horario das datas vindas do banco são travadas em 3:00:00.000Z 
     const todayDate = new Date(); todayDate.setUTCHours(3); todayDate.setUTCMinutes(0); todayDate.setUTCSeconds(0); todayDate.setUTCMilliseconds(0);
 
-    const delay = (todayDate - rows[0].rentDate) / 1000 * 60 * 60 * 24;
+    const delay = (todayDate - rows[0].rentDate) / (1000 * 60 * 60 * 24);
     let delayFee = null;
 
     console.log(delay, rows[0].daysRented);
