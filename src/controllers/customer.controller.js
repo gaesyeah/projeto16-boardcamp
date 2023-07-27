@@ -4,7 +4,7 @@ export const selectCustomers = async (req, res) => {
   try {
     const { rows } = await db.query(`
       SELECT *,
-      TO_CHAR(birthday, \'YYYY/MM/DD\') AS birthday 
+      TO_CHAR(birthday, \'YYYY-MM-DD\') AS birthday 
       FROM customers;`
     );
     res.send(rows);
@@ -18,7 +18,7 @@ export const selectCustomersById = async (req, res) => {
   try {
     const { rows } = await db.query(`
       SELECT *, 
-      TO_CHAR(birthday, \'YYYY/MM/DD\') AS birthday 
+      TO_CHAR(birthday, \'YYYY-MM-DD\') AS birthday 
       FROM customers 
       WHERE id = $1
       ;`, [id]

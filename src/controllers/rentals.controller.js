@@ -6,8 +6,8 @@ export const selectRentals = async (req, res) => {
       SELECT rentals.*,
         JSON_BUILD_OBJECT('id', customers.id, 'name', customers.name) AS customer,
         JSON_BUILD_OBJECT('id', games.id, 'name', games.name) AS game,
-        TO_CHAR("returnDate", \'YYYY/MM/DD\') AS "returnDate",
-        TO_CHAR("rentDate", \'YYYY/MM/DD\') AS "rentDate"
+        TO_CHAR("returnDate", \'YYYY-MM-DD\') AS "returnDate",
+        TO_CHAR("rentDate", \'YYYY-MM-DD\') AS "rentDate"
       FROM rentals 
       JOIN customers ON rentals."customerId" = customers.id
       JOIN games ON  rentals."gameId" = games.id
