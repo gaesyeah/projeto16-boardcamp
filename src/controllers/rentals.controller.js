@@ -10,7 +10,7 @@ export const selectRentals = async (req, res) => {
         TO_CHAR("rentDate", \'YYYY-MM-DD\') AS "rentDate"
       FROM rentals 
       JOIN customers ON rentals."customerId" = customers.id
-      JOIN games ON  rentals."gameId" = games.id
+      JOIN games ON rentals."gameId" = games.id
       ;`)
     ;
     res.send(rows);
@@ -22,17 +22,30 @@ export const selectRentals = async (req, res) => {
 export const insertRentals = async (req, res) => {
   const { customerId, gameId, daysRented } = req.body;
   try {    
-    if (daysRented <= 0) return res.sendStatus(400);
+    const { rows, rowCount } = await db.query(`
+      SELECT "pricePerDay", "stockTotal"
+      FROM games
+      WHERE "id" = $1
+      ;`, [gameId]
+    );
+    if (rowCount === 0) return res.sendStatus(400);
 
-    const { rows, rowCount } = await db.query('SELECT * FROM games WHERE id = $1;', [gameId]);
-    if (rowCount === 0 || daysRented > rows[0].stockTotal) return res.sendStatus(400);
+    const client = await db.query(`
+      SELECT *
+      FROM customers
+      WHERE "id" = $1
+    ;`, [customerId])
+    if (client.rowCount === 0) return res.sendStatus(400);
 
-    const daysRentedFromGameId = await db.query('SELECT "daysRented", "returnDate" FROM rentals WHERE "gameId" = $1;', [gameId]);
-    let rentedValue = 0;
-    daysRentedFromGameId.rows.forEach(({ daysRented, returnDate }) => {
-      if (returnDate === null) rentedValue = rentedValue + daysRented;
-    });
-    if (rentedValue >= rows[0].stockTotal) return res.sendStatus(400);
+    const rentalsFromGameId = await db.query(`
+      SELECT "returnDate"
+      FROM RENTALS
+      WHERE "gameId" = $1
+      ;`, [gameId]
+    );
+    let returnedQtd = 0
+    rentalsFromGameId.rows.forEach(({ returnDate }) => { if (returnDate === null) returnedQtd++ });
+    if (returnedQtd >= rows[0].stockTotal) return res.sendStatus(400);
 
     await db.query(`
       INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice")

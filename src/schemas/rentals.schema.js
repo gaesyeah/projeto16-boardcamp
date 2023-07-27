@@ -5,7 +5,7 @@ export const rentalsSchema = joi.object({
   customerId: joi.number().positive().required(),
   gameId: joi.number().positive().required(),
   rentDate: joi.extend(JoiDate).date().format('YYYY-MM-DD').utc(),
-  daysRented: joi.number().required(),
+  daysRented: joi.number().min(1).required(),
   returnDate: joi.extend(JoiDate).date().format('YYYY-MM-DD').utc().allow(null),
   originalPrice: joi.number().positive(),
   delayFee: joi.number().positive().allow(null)
