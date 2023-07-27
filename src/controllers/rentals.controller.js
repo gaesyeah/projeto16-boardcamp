@@ -68,11 +68,14 @@ export const updateRentalsById = async (req, res) => {
       ;`, [id]
     );
     
-    //a linha abaixo foi necessária pq o horario das datas vindas do banco são travadas em 3:00:00.000Z 
-    const todayDate = new Date(); todayDate.setUTCHours(3); todayDate.setUTCMinutes(0); todayDate.setUTCSeconds(0); todayDate.setUTCMilliseconds(0);
+    //as duas linhas abaixo foram necessárias pq o horario das datas vindas do banco são travadas em 3:00:00.000Z 
+    const todayDate = new Date(); todayDate.setUTCHours(0); todayDate.setUTCMinutes(0); todayDate.setUTCSeconds(0); todayDate.setUTCMilliseconds(0);
+    rows[0].rentDate.setUTCHours(0); rows[0].rentDate.setUTCMinutes(0); rows[0].rentDate.setUTCSeconds(0); rows[0].rentDate.setUTCMilliseconds(0);
 
+    //hoje - dia que aluguei (ex: 27 - 20 = 7)
     const delay = (todayDate - rows[0].rentDate) / (1000 * 60 * 60 * 24);
     let delayFee = null;
+    //se o delay for maior que o dia que eu deveria ter entregado (ex: 7 > 5; 7 - 5 = 2)
     if (delay > rows[0].daysRented){
       const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rows[0].gameId}`);
       delayFee = game.rows[0].pricePerDay * (delay - rows[0].daysRented);
