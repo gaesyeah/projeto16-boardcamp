@@ -2,18 +2,15 @@ import { db } from "../database/database.js";
 
 export const selectRentals = async (req, res) => {
   try {
-    const { rows, rowCount } = await db.query('SELECT * FROM rentals;');
-    if (rowCount > 0){
-      for (let i = 0; i < rows.length; i++) {
-        let id = rows[i].customerId;
-        const user = await db.query(`SELECT name FROM customers WHERE id = ${id};`);
-        rows[i].customer = { id, name: user.rows[0].name };
-
-        id = rows[i].gameId;
-        const game = await db.query(`SELECT name FROM games WHERE id = ${id};`);
-        rows[i].game = { id, name: game.rows[0].name };
-      }
-    }
+    const { rows } = await db.query(`
+      SELECT rentals.*,
+        JSON_BUILD_OBJECT('id', customers.id, 'name', customers.name) AS customer,
+        JSON_BUILD_OBJECT('id', games.id, 'name', games.name) AS game
+      FROM rentals 
+      JOIN customers ON rentals."customerId" = customers.id
+      JOIN games ON  rentals."gameId" = games.id
+      ;`)
+    ;
     res.send(rows);
   } catch ({ message }) {
     res.status(500).send(message);
@@ -56,9 +53,6 @@ export const updateRentalsById = async (req, res) => {
 
     const delay = (todayDate - rows[0].rentDate) / (1000 * 60 * 60 * 24);
     let delayFee = null;
-
-    console.log(delay, rows[0].daysRented);
-
     if (delay > rows[0].daysRented){
       const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rows[0].gameId}`);
       delayFee = game.rows[0].pricePerDay * (delay - rows[0].daysRented);
