@@ -2,7 +2,11 @@ import { db } from "../database/database.js";
 
 export const selectCustomers = async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM customers');
+    const { rows } = await db.query(`
+      SELECT *,
+      TO_CHAR(birthday, \'YYYY/MM/DD\') AS birthday 
+      FROM customers;`
+    );
     res.send(rows);
   } catch ({ message }) {
     res.status(500).send(message);
@@ -12,7 +16,13 @@ export const selectCustomers = async (req, res) => {
 export const selectCustomersById = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await db.query('SELECT * FROM customers WHERE id = $1', [id]);
+    const { rows } = await db.query(`
+      SELECT *, 
+      TO_CHAR(birthday, \'YYYY/MM/DD\') AS birthday 
+      FROM customers 
+      WHERE id = $1
+      ;`, [id]
+    );
     res.send(rows[0]);
   } catch ({ message }) {
     res.status(500).send(message);

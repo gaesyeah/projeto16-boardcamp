@@ -5,7 +5,9 @@ export const selectRentals = async (req, res) => {
     const { rows } = await db.query(`
       SELECT rentals.*,
         JSON_BUILD_OBJECT('id', customers.id, 'name', customers.name) AS customer,
-        JSON_BUILD_OBJECT('id', games.id, 'name', games.name) AS game
+        JSON_BUILD_OBJECT('id', games.id, 'name', games.name) AS game,
+        TO_CHAR("returnDate", \'YYYY/MM/DD\') AS "returnDate",
+        TO_CHAR("rentDate", \'YYYY/MM/DD\') AS "rentDate"
       FROM rentals 
       JOIN customers ON rentals."customerId" = customers.id
       JOIN games ON  rentals."gameId" = games.id
@@ -46,7 +48,12 @@ export const insertRentals = async (req, res) => {
 export const updateRentalsById = async (req, res) => {
   const { id } = req.params;
   try {
-    const { rows } = await db.query('SELECT "gameId", "rentDate", "daysRented" FROM rentals WHERE id = $1;', [id]);
+    const { rows } = await db.query(`
+      SELECT "gameId", "rentDate", "daysRented" 
+      FROM rentals 
+      WHERE id = $1
+      ;`, [id]
+    );
     
     //a linha abaixo foi necessária pq o horario das datas vindas do banco são travadas em 3:00:00.000Z 
     const todayDate = new Date(); todayDate.setUTCHours(3); todayDate.setUTCMinutes(0); todayDate.setUTCSeconds(0); todayDate.setUTCMilliseconds(0);
