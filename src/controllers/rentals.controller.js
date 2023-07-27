@@ -26,7 +26,14 @@ export const insertRentals = async (req, res) => {
     if (daysRented <= 0) return res.sendStatus(400);
 
     const { rows, rowCount } = await db.query('SELECT * FROM games WHERE id = $1;', [gameId]);
-    if (rowCount === 0) return res.sendStatus(400);
+    if (rowCount === 0 || daysRented > rows[0].stockTotal) return res.sendStatus(400);
+
+    const daysRentedFromGameId = await db.query('SELECT "daysRented", "returnDate" FROM rentals WHERE "gameId" = $1;', [gameId]);
+    let rentedValue = 0;
+    daysRentedFromGameId.rows.forEach(({ daysRented, returnDate }) => {
+      if (returnDate === null) rentedValue = rentedValue + daysRented;
+    });
+    if (rentedValue >= rows[0].stockTotal) return res.sendStatus(400);
 
     await db.query(`
       INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice")
@@ -49,6 +56,9 @@ export const updateRentalsById = async (req, res) => {
 
     const delay = (todayDate - rows[0].rentDate) / 1000 * 60 * 60 * 24;
     let delayFee = null;
+
+    console.log(delay, rows[0].daysRented);
+
     if (delay > rows[0].daysRented){
       const game = await db.query(`SELECT "pricePerDay" FROM games WHERE id = ${rows[0].gameId}`);
       delayFee = game.rows[0].pricePerDay * (delay - rows[0].daysRented);
