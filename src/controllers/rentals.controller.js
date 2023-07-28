@@ -40,12 +40,10 @@ export const insertRentals = async (req, res) => {
     const rentalsFromGameId = await db.query(`
       SELECT "returnDate"
       FROM RENTALS
-      WHERE "gameId" = $1
+      WHERE "gameId" = $1 AND "returnDate" IS NULL
       ;`, [gameId]
     );
-    let returnedQtd = 0
-    rentalsFromGameId.rows.forEach(({ returnDate }) => { if (returnDate === null) returnedQtd++ });
-    if (returnedQtd >= rows[0].stockTotal) return res.sendStatus(400);
+    if (rentalsFromGameId.rowCount >= rows[0].stockTotal) return res.sendStatus(400);
 
     await db.query(`
       INSERT INTO rentals ("customerId", "gameId", "rentDate", "daysRented", "originalPrice")
@@ -68,12 +66,8 @@ export const updateRentalsById = async (req, res) => {
       ;`, [id]
     );
     
-    //as duas linhas abaixo foram necessárias pq o horario das datas vindas do banco são travadas em 3:00:00.000Z 
-    const todayDate = new Date(); todayDate.setUTCHours(0); todayDate.setUTCMinutes(0); todayDate.setUTCSeconds(0); todayDate.setUTCMilliseconds(0);
-    rows[0].rentDate.setUTCHours(0); rows[0].rentDate.setUTCMinutes(0); rows[0].rentDate.setUTCSeconds(0); rows[0].rentDate.setUTCMilliseconds(0);
-
     //hoje - dia que aluguei (ex: 27 - 20 = 7)
-    const delay = (todayDate - rows[0].rentDate) / (1000 * 60 * 60 * 24);
+    const delay = Math.floor((new Date() - rows[0].rentDate) / (1000 * 60 * 60 * 24));
     let delayFee = null;
     //se o delay for maior que o dia que eu deveria ter entregado (ex: 7 > 5; 7 - 5 = 2)
     if (delay > rows[0].daysRented){
