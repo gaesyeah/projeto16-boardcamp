@@ -4,14 +4,14 @@ import pg from 'pg';
 dotenv.config();
 const { DATABASE_URL } = process.env;
 
-const configDataBase = {
+const configDatabase = {
   connectionString:DATABASE_URL
 };
 const { Pool } = pg;
 
-export const db = new Pool(configDataBase);
+export const db = new Pool(configDatabase);
 
-if (process.env.NODE_ENV === "production") configDataBase.ssl = true;
+if (process.env.NODE_ENV === "production") configDatabase.ssl = true;
 
 db.connect((error, client, done) => {
   if (error) return console.log('Erro ao conectar ao banco de dados:', error);
